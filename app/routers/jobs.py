@@ -25,6 +25,7 @@ router = APIRouter(prefix="/api/v1/jobs", tags=["Jobs"])
 
 def _format_certificate_response(cert: Certificate) -> CertificateResponse:
     download_url = f"/api/v1/certificates/{cert.id}/download" if cert.status == CertificateStatus.SUCCESS else None
+    preview_url = f"/api/v1/certificates/{cert.id}/preview" if cert.status == CertificateStatus.SUCCESS else None
     return CertificateResponse(
         id=cert.id,
         job_id=cert.job_id,
@@ -35,6 +36,7 @@ def _format_certificate_response(cert: Certificate) -> CertificateResponse:
         status=cert.status,
         error_message=cert.error_message,
         download_url=download_url,
+        preview_url=preview_url,
         created_at=cert.created_at,
         generated_at=cert.generated_at,
     )

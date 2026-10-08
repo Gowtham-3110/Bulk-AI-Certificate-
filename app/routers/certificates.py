@@ -1,5 +1,5 @@
 from pathlib import Path
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
@@ -12,6 +12,7 @@ router = APIRouter(prefix="/api/v1/certificates", tags=["Certificates"])
 
 def _format_certificate_response(cert: Certificate) -> CertificateResponse:
     download_url = f"/api/v1/certificates/{cert.id}/download" if cert.status == CertificateStatus.SUCCESS else None
+    preview_url = f"/api/v1/certificates/{cert.id}/preview" if cert.status == CertificateStatus.SUCCESS else None
     return CertificateResponse(
         id=cert.id,
         job_id=cert.job_id,
@@ -22,6 +23,7 @@ def _format_certificate_response(cert: Certificate) -> CertificateResponse:
         status=cert.status,
         error_message=cert.error_message,
         download_url=download_url,
+        preview_url=preview_url,
         created_at=cert.created_at,
         generated_at=cert.generated_at,
     )
@@ -47,11 +49,11 @@ def get_certificate_metadata(
 
 
 @router.get(
-    "/{certificate_id}/download",
-    summary="Download Individual Certificate PDF",
-    description="Download the generated PDF for an individual certificate.",
+    "/{certificate_id}/preview",
+    summary="Preview Certificate PDF Inline",
+    description="Stream the generated PDF with inline disposition for live browser preview.",
 )
-def download_certificate_pdf(
+def preview_certificate_pdf(
     certificate_id: str,
     db: Session = Depends(get_db),
 ):
@@ -81,6 +83,51 @@ def download_certificate_pdf(
     return FileResponse(
         path=str(file_path),
         media_type="application/pdf",
+        content_disposition_type="inline",
+        filename=filename,
+    )
+
+
+@router.get(
+    "/{certificate_id}/download",
+    summary="Download Individual Certificate PDF",
+    description="Download the generated PDF for an individual certificate.",
+)
+def download_certificate_pdf(
+    certificate_id: str,
+    inline: bool = Query(default=False, description="Set to true to view inline instead of downloading"),
+    preview: bool = Query(default=False, description="Alias for inline preview"),
+    db: Session = Depends(get_db),
+):
+    cert = db.query(Certificate).filter(Certificate.id == certificate_id).first()
+    if not cert:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Certificate with ID '{certificate_id}' not found.",
+        )
+
+    if cert.status != CertificateStatus.SUCCESS or not cert.file_path:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Certificate has not been generated yet. Current status: {cert.status}. Error: {cert.error_message or 'None'}",
+        )
+
+    file_path = Path(cert.file_path)
+    if not file_path.exists():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Generated certificate file was not found on server storage.",
+        )
+
+    safe_name = "".join(c for c in cert.recipient_name if c.isalnum() or c in (" ", "-", "_")).strip().replace(" ", "_")
+    filename = f"{safe_name}_{cert.certificate_code}.pdf"
+
+    disposition = "inline" if (inline or preview) else "attachment"
+
+    return FileResponse(
+        path=str(file_path),
+        media_type="application/pdf",
+        content_disposition_type=disposition,
         filename=filename,
     )
 

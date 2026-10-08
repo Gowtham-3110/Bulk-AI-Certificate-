@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title }} - Enterprise Backend & Portal</title>
+    <title>{{ title }} - Enterprise Bulk Certification Engine</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
@@ -15,16 +15,36 @@
             <div class="brand">
                 <div class="brand-icon">🎓</div>
                 <div class="brand-text">
-                    <h1>CertifyFast</h1>
-                    <span class="badge">Bulk Generator API</span>
+                    <div class="brand-title-wrap">
+                        <h1>CertifyFast</h1>
+                        <span class="badge">Enterprise Pro</span>
+                    </div>
+                    <span class="brand-sub">Bulk Certificate Generation & Verification</span>
                 </div>
             </div>
+
             <nav class="nav-links">
-                <a href="#generate" class="nav-item active" data-tab="tab-generate">Generate Certificates</a>
-                <a href="#jobs" class="nav-item" data-tab="tab-jobs">Job Monitor</a>
-                <a href="#verify" class="nav-item" data-tab="tab-verify">Verify Credential</a>
-                <a href="/docs" target="_blank" class="nav-item swagger-link">Interactive Swagger API ↗</a>
+                <a href="#generate" class="nav-item active" data-tab="tab-generate">
+                    <span class="nav-icon">⚡</span> Batch Generator
+                </a>
+                <a href="#jobs" class="nav-item" data-tab="tab-jobs">
+                    <span class="nav-icon">📊</span> Job Monitor
+                </a>
+                <a href="#verify" class="nav-item" data-tab="tab-verify">
+                    <span class="nav-icon">🛡️</span> Verify Credential
+                </a>
+                <a href="/docs" target="_blank" class="nav-item swagger-link">
+                    <span class="nav-icon">⚡</span> API Docs ↗
+                </a>
             </nav>
+
+            <div class="header-actions">
+                <!-- Theme Toggle Button -->
+                <button type="button" class="theme-toggle-btn" id="theme-toggle" title="Toggle Light / Dark Mode">
+                    <span class="theme-icon" id="theme-icon">☀️</span>
+                    <span class="theme-label" id="theme-label">Light Mode</span>
+                </button>
+            </div>
         </div>
     </header>
 
@@ -36,12 +56,14 @@
         <section id="tab-generate" class="tab-content active">
             <div class="section-header">
                 <div>
-                    <h2>Submit Certificate Generation Job</h2>
-                    <p class="subtitle">Submit a bulk batch of recipients to generate tamper-evident vector PDF certificates in background.</p>
+                    <div class="section-tag">High-Throughput Batch Processing</div>
+                    <h2>Generate Bulk Certificates</h2>
+                    <p class="subtitle">Submit bulk recipient batches to asynchronously render tamper-evident vector PDF credentials.</p>
                 </div>
                 <div class="quick-actions">
-                    <button type="button" class="btn btn-outline" id="btn-load-sample">Load 5 Valid Participants</button>
-                    <button type="button" class="btn btn-outline-warning" id="btn-load-mixed">Load Mixed Batch (Tests Failure Isolation)</button>
+                    <button type="button" class="btn btn-outline" id="btn-load-sample">⚡ Load 5 Sample Records</button>
+                    <button type="button" class="btn btn-outline-warning" id="btn-load-mixed">⚠️ Test Error Isolation</button>
+                    <button type="button" class="btn btn-secondary" id="btn-open-bulk-import">📋 Quick Paste / CSV</button>
                 </div>
             </div>
 
@@ -49,15 +71,15 @@
                 <form id="job-form">
                     <div class="form-grid">
                         <div class="form-group">
-                            <label for="event_name">Event / Course Title <span class="req">*</span></label>
+                            <label for="event_name">Course / Event Title <span class="req">*</span></label>
                             <input type="text" id="event_name" name="event_name" required placeholder="e.g. Masterclass in Generative AI Systems" value="Advanced Machine Learning Bootcamp">
                         </div>
                         <div class="form-group">
-                            <label for="issuer_name">Issuing Organization</label>
-                            <input type="text" id="issuer_name" name="issuer_name" placeholder="e.g. Global Tech Institute" value="Global AI Certification Board">
+                            <label for="issuer_name">Issuing Authority</label>
+                            <input type="text" id="issuer_name" name="issuer_name" placeholder="e.g. Stanford AI Lab" value="Global AI Certification Board">
                         </div>
                         <div class="form-group">
-                            <label for="template_title">Certificate Title</label>
+                            <label for="template_title">Credential Title</label>
                             <input type="text" id="template_title" name="template_title" placeholder="e.g. Certificate of Achievement" value="Certificate of Completion">
                         </div>
                         <div class="form-group">
@@ -69,10 +91,17 @@
                     <div class="recipients-section">
                         <div class="recipients-header">
                             <div>
-                                <h3>Recipients List (<span id="recipient-count">0</span>)</h3>
-                                <p class="help-text">Each recipient will receive an independently rendered vector PDF certificate with a unique verification code.</p>
+                                <div class="recipients-title-row">
+                                    <h3>Recipients Batch</h3>
+                                    <span class="count-badge"><span id="recipient-count">0</span> participants</span>
+                                    <span class="status-summary" id="recipient-validation-summary">All emails valid</span>
+                                </div>
+                                <p class="help-text">Each recipient will receive a cryptographic certificate code and individual high-resolution PDF certificate.</p>
                             </div>
-                            <button type="button" class="btn btn-sm btn-secondary" id="btn-add-recipient">+ Add Recipient</button>
+                            <div class="recipients-btn-group">
+                                <button type="button" class="btn btn-sm btn-secondary" id="btn-clear-recipients">Clear All</button>
+                                <button type="button" class="btn btn-sm btn-primary" id="btn-add-recipient">+ Add Recipient</button>
+                            </div>
                         </div>
 
                         <div class="table-wrapper">
@@ -80,14 +109,14 @@
                                 <thead>
                                     <tr>
                                         <th style="width: 5%">#</th>
-                                        <th style="width: 35%">Recipient Name <span class="req">*</span></th>
-                                        <th style="width: 35%">Recipient Email <span class="req">*</span></th>
-                                        <th style="width: 15%">Custom Grade / Role</th>
-                                        <th style="width: 10%">Action</th>
+                                        <th style="width: 32%">Recipient Name <span class="req">*</span></th>
+                                        <th style="width: 33%">Recipient Email <span class="req">*</span></th>
+                                        <th style="width: 20%">Grade / Honors / Role</th>
+                                        <th style="width: 10%; text-align: center;">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody id="recipients-tbody">
-                                    <!-- Rows rendered dynamically -->
+                                    <!-- Rendered dynamically -->
                                 </tbody>
                             </table>
                         </div>
@@ -95,11 +124,12 @@
 
                     <div class="form-footer">
                         <div class="api-hint">
-                            <code>POST /api/v1/jobs</code> &nbsp;•&nbsp; Asynchronous Background Processing
+                            <span class="api-dot"></span>
+                            <code>POST /api/v1/jobs</code> &nbsp;•&nbsp; Non-blocking Background Queue & Relational SQLite Persistence
                         </div>
-                        <button type="submit" class="btn btn-primary" id="btn-submit-job">
-                            <span class="btn-text">Generate Certificates Now</span>
-                            <span class="btn-spinner" style="display: none;">⏳ Creating Job...</span>
+                        <button type="submit" class="btn btn-primary btn-submit-hero" id="btn-submit-job">
+                            <span class="btn-text">🚀 Dispatch Generation Batch</span>
+                            <span class="btn-spinner" style="display: none;">⏳ Enqueuing Job...</span>
                         </button>
                     </div>
                 </form>
@@ -110,16 +140,22 @@
         <section id="tab-jobs" class="tab-content">
             <div class="section-header">
                 <div>
-                    <h2>Job Tracker & Generation Monitor</h2>
-                    <p class="subtitle">Monitor progress in real-time, view successful/failed counts, and download individual or zipped certificates.</p>
+                    <div class="section-tag">Real-Time Asynchronous Processing</div>
+                    <h2>Job Monitor & Certificate Registry</h2>
+                    <p class="subtitle">Track live completion percentages, inspect individual recipient outcomes, and download certificates.</p>
                 </div>
-                <button type="button" class="btn btn-outline" id="btn-refresh-jobs">🔄 Refresh Jobs</button>
+                <div class="quick-actions">
+                    <button type="button" class="btn btn-outline" id="btn-refresh-jobs">🔄 Refresh Queue</button>
+                </div>
             </div>
 
             <div class="jobs-layout">
                 <!-- Left: Jobs List -->
                 <div class="card jobs-list-card">
-                    <h3>Recent Jobs</h3>
+                    <div class="card-header-bar">
+                        <h3>Active & Recent Jobs</h3>
+                        <span class="live-indicator"><span class="pulse-dot"></span> Live</span>
+                    </div>
                     <div id="jobs-list" class="jobs-list-container">
                         <div class="loading-state">Loading recent jobs...</div>
                     </div>
@@ -129,16 +165,19 @@
                 <div class="card job-detail-card" id="job-detail-card">
                     <div class="empty-state" id="job-detail-empty">
                         <div class="empty-icon">📂</div>
-                        <h3>Select a Job</h3>
-                        <p>Click on any job from the list on the left to inspect its detailed status and download generated credentials.</p>
+                        <h3>Select a Job from the Queue</h3>
+                        <p>Click on any job in the left sidebar to inspect real-time progress, download generated PDFs, or export the bulk ZIP archive.</p>
                     </div>
 
                     <div id="job-detail-content" style="display: none;">
                         <div class="job-detail-header">
                             <div>
-                                <span class="status-pill" id="detail-job-status">PENDING</span>
+                                <div class="detail-header-top">
+                                    <span class="status-pill" id="detail-job-status">PENDING</span>
+                                    <span class="job-id-tag" id="detail-job-id-short">ID: ...</span>
+                                </div>
                                 <h3 id="detail-job-event">Event Name</h3>
-                                <div class="job-meta-line" id="detail-job-meta">Job ID: ... • Created: ...</div>
+                                <div class="job-meta-line" id="detail-job-meta">Issuer: ... • Issue Date: ...</div>
                             </div>
                             <div class="job-detail-actions">
                                 <a id="btn-download-all" href="#" class="btn btn-success" download>
@@ -147,10 +186,10 @@
                             </div>
                         </div>
 
-                        <!-- Progress Bar -->
+                        <!-- Progress Bar Box -->
                         <div class="progress-box">
                             <div class="progress-info">
-                                <span class="progress-label">Generation Progress</span>
+                                <span class="progress-label">Batch Processing Progress</span>
                                 <span class="progress-val" id="detail-progress-val">0%</span>
                             </div>
                             <div class="progress-track">
@@ -158,7 +197,7 @@
                             </div>
                         </div>
 
-                        <!-- Stat Counters -->
+                        <!-- Stat Cards Grid -->
                         <div class="stats-grid">
                             <div class="stat-card">
                                 <div class="stat-num" id="stat-total">0</div>
@@ -170,13 +209,19 @@
                             </div>
                             <div class="stat-card stat-failed">
                                 <div class="stat-num" id="stat-failed">0</div>
-                                <div class="stat-label">Failed / Invalid</div>
+                                <div class="stat-label">Failed / Isolated</div>
                             </div>
                         </div>
 
-                        <!-- Recipients Generation Results Table -->
+                        <!-- Recipients Generation Results Section -->
                         <div class="certificates-list-section">
-                            <h4>Recipient Generation Results</h4>
+                            <div class="certs-list-header">
+                                <h4>Participant Credential Status</h4>
+                                <div class="filter-controls">
+                                    <input type="text" id="cert-search-input" placeholder="🔍 Search participant name or email..." class="search-mini-input">
+                                </div>
+                            </div>
+
                             <div class="table-wrapper">
                                 <table class="data-table">
                                     <thead>
@@ -184,8 +229,8 @@
                                             <th>Recipient</th>
                                             <th>Email</th>
                                             <th>Status</th>
-                                            <th>Verification Code / Error</th>
-                                            <th>Action</th>
+                                            <th>Credential Code / Error Reason</th>
+                                            <th style="text-align: center;">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody id="detail-certs-tbody">
@@ -203,19 +248,21 @@
         <section id="tab-verify" class="tab-content">
             <div class="section-header">
                 <div>
-                    <h2>Public Certificate Verification</h2>
-                    <p class="subtitle">Validate the authenticity and tamper-resistance of any issued certificate using its unique code.</p>
+                    <div class="section-tag">Public Trust & Authenticity</div>
+                    <h2>Verify Issued Credential</h2>
+                    <p class="subtitle">Validate digital credential authenticity, issuance date, and official tamper status.</p>
                 </div>
             </div>
 
             <div class="card verify-card">
                 <form id="verify-form" class="verify-form">
                     <div class="form-group">
-                        <label for="verify-code-input">Enter Certificate ID / Verification Code</label>
+                        <label for="verify-code-input">Enter Unique Certificate ID</label>
                         <div class="verify-input-group">
-                            <input type="text" id="verify-code-input" placeholder="e.g. CERT-202610-A1B2C3D4" required>
+                            <input type="text" id="verify-code-input" placeholder="e.g. CERT-202610-8A71F92C" required>
                             <button type="submit" class="btn btn-primary" id="btn-verify">Verify Credential</button>
                         </div>
+                        <span class="input-hint">The unique cryptographic certificate code located at the bottom of official PDF credentials.</span>
                     </div>
                 </form>
 
@@ -226,14 +273,63 @@
         </section>
     </main>
 
+    <!-- QUICK PASTE / CSV BULK IMPORT MODAL -->
+    <div id="bulk-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Quick Paste / CSV Recipient Import</h3>
+                <button type="button" class="btn-close-modal" id="btn-close-modal">✕</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-hint">Paste one recipient per line in format: <code>Name, Email, Optional Grade/Role</code></p>
+                <textarea id="bulk-paste-textarea" rows="8" class="bulk-textarea" placeholder="Dr. Alan Turing, alan@bletchley.uk, Distinction
+Ada Lovelace, ada@analytics.org, Honors
+Grace Hopper, grace@navy.mil, Pioneer
+Claude Shannon, shannon@mit.edu, 100%"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" id="btn-cancel-modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="btn-apply-bulk">Import Recipients</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PREVIEW PDF MODAL -->
+    <div id="preview-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-card modal-preview-card">
+            <div class="modal-header">
+                <h3 id="preview-title">Certificate Preview</h3>
+                <div style="display: flex; gap: 0.6rem; align-items: center;">
+                    <a id="btn-preview-newtab" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline" title="Open certificate in a separate full-size browser tab">⤢ Full Screen</a>
+                    <button type="button" class="btn-close-modal" id="btn-close-preview" title="Close Preview">✕</button>
+                </div>
+            </div>
+            <div class="modal-body preview-modal-body" style="position: relative;">
+                <div id="preview-loading" class="preview-loading-overlay" style="display: none;">
+                    <span class="preview-loading-spinner"></span>
+                    <span>Rendering Certificate Document...</span>
+                </div>
+                <iframe id="preview-iframe" class="preview-iframe" src="about:blank" title="Certificate Preview"></iframe>
+            </div>
+            <div class="modal-footer">
+                <a id="btn-preview-download" href="#" class="btn btn-primary" download>Download PDF</a>
+                <button type="button" class="btn btn-outline" id="btn-close-preview-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
     <footer class="app-footer">
         <div class="footer-container">
-            <div>
-                <strong>CertifyFast Backend Engine</strong> — Built with FastAPI, SQLite / SQLAlchemy & ReportLab.
+            <div class="footer-brand">
+                <span class="footer-dot"></span>
+                <strong>CertifyFast Engine</strong> — High-Performance Bulk Generation with SQLite, ReportLab & FastAPI.
             </div>
-            <div>
-                <a href="/docs" target="_blank">OpenAPI Docs</a> &nbsp;|&nbsp; 
-                <a href="/health" target="_blank">Health Check</a>
+            <div class="footer-links">
+                <a href="/docs" target="_blank">Swagger OpenAPI</a>
+                <span class="sep">•</span>
+                <a href="/redoc" target="_blank">ReDoc</a>
+                <span class="sep">•</span>
+                <a href="/health" target="_blank">System Health</a>
             </div>
         </div>
     </footer>

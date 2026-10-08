@@ -62,6 +62,7 @@ class CertificateResponse(BaseModel):
     status: CertificateStatus
     error_message: Optional[str] = None
     download_url: Optional[str] = None
+    preview_url: Optional[str] = None
     created_at: datetime
     generated_at: Optional[datetime] = None
 

@@ -28,6 +28,31 @@ def test_download_individual_certificate_pdf(client):
     assert download_resp.content.startswith(b"%PDF-")
 
 
+def test_preview_individual_certificate_pdf(client):
+    """Test inline preview for an individual generated PDF certificate."""
+    payload = {
+        "event_name": "Cybersecurity Operations",
+        "recipients": [
+            {"name": "Grace Hopper", "email": "grace@navy.mil"}
+        ]
+    }
+    create_resp = client.post("/api/v1/jobs", json=payload)
+    job_id = create_resp.json()["id"]
+
+    # Get certificate ID and verify preview_url
+    status_resp = client.get(f"/api/v1/jobs/{job_id}")
+    cert_data = status_resp.json()["certificates"][0]
+    cert_id = cert_data["id"]
+    assert cert_data["preview_url"] == f"/api/v1/certificates/{cert_id}/preview"
+
+    # Preview PDF
+    preview_resp = client.get(f"/api/v1/certificates/{cert_id}/preview")
+    assert preview_resp.status_code == status.HTTP_200_OK
+    assert preview_resp.headers["content-type"] == "application/pdf"
+    assert "inline" in preview_resp.headers.get("content-disposition", "")
+    assert preview_resp.content.startswith(b"%PDF-")
+
+
 def test_download_all_certificates_as_zip(client):
     """Test retrieving all generated certificates as a compressed ZIP file."""
     payload = {

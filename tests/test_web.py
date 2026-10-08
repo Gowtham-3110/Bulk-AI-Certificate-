@@ -13,4 +13,4 @@ def test_dashboard_ui_renders(client):
     resp = client.get("/")
     assert resp.status_code == status.HTTP_200_OK
     assert "CertifyFast" in resp.text
-    assert "Bulk Generator API" in resp.text
+    assert "Bulk Certificate" in resp.text
