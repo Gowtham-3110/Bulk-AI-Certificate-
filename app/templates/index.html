@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - Enterprise Backend & Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header class="app-header">
+        <div class="header-container">
+            <div class="brand">
+                <div class="brand-icon">🎓</div>
+                <div class="brand-text">
+                    <h1>CertifyFast</h1>
+                    <span class="badge">Bulk Generator API</span>
+                </div>
+            </div>
+            <nav class="nav-links">
+                <a href="#generate" class="nav-item active" data-tab="tab-generate">Generate Certificates</a>
+                <a href="#jobs" class="nav-item" data-tab="tab-jobs">Job Monitor</a>
+                <a href="#verify" class="nav-item" data-tab="tab-verify">Verify Credential</a>
+                <a href="/docs" target="_blank" class="nav-item swagger-link">Interactive Swagger API ↗</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <!-- Toast Notification Area -->
+        <div id="toast-container" class="toast-container"></div>
+
+        <!-- TAB 1: GENERATE CERTIFICATES -->
+        <section id="tab-generate" class="tab-content active">
+            <div class="section-header">
+                <div>
+                    <h2>Submit Certificate Generation Job</h2>
+                    <p class="subtitle">Submit a bulk batch of recipients to generate tamper-evident vector PDF certificates in background.</p>
+                </div>
+                <div class="quick-actions">
+                    <button type="button" class="btn btn-outline" id="btn-load-sample">Load 5 Valid Participants</button>
+                    <button type="button" class="btn btn-outline-warning" id="btn-load-mixed">Load Mixed Batch (Tests Failure Isolation)</button>
+                </div>
+            </div>
+
+            <div class="card form-card">
+                <form id="job-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="event_name">Event / Course Title <span class="req">*</span></label>
+                            <input type="text" id="event_name" name="event_name" required placeholder="e.g. Masterclass in Generative AI Systems" value="Advanced Machine Learning Bootcamp">
+                        </div>
+                        <div class="form-group">
+                            <label for="issuer_name">Issuing Organization</label>
+                            <input type="text" id="issuer_name" name="issuer_name" placeholder="e.g. Global Tech Institute" value="Global AI Certification Board">
+                        </div>
+                        <div class="form-group">
+                            <label for="template_title">Certificate Title</label>
+                            <input type="text" id="template_title" name="template_title" placeholder="e.g. Certificate of Achievement" value="Certificate of Completion">
+                        </div>
+                        <div class="form-group">
+                            <label for="issue_date">Issue Date</label>
+                            <input type="date" id="issue_date" name="issue_date">
+                        </div>
+                    </div>
+
+                    <div class="recipients-section">
+                        <div class="recipients-header">
+                            <div>
+                                <h3>Recipients List (<span id="recipient-count">0</span>)</h3>
+                                <p class="help-text">Each recipient will receive an independently rendered vector PDF certificate with a unique verification code.</p>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-secondary" id="btn-add-recipient">+ Add Recipient</button>
+                        </div>
+
+                        <div class="table-wrapper">
+                            <table class="data-table" id="recipients-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 5%">#</th>
+                                        <th style="width: 35%">Recipient Name <span class="req">*</span></th>
+                                        <th style="width: 35%">Recipient Email <span class="req">*</span></th>
+                                        <th style="width: 15%">Custom Grade / Role</th>
+                                        <th style="width: 10%">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recipients-tbody">
+                                    <!-- Rows rendered dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="form-footer">
+                        <div class="api-hint">
+                            <code>POST /api/v1/jobs</code> &nbsp;•&nbsp; Asynchronous Background Processing
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="btn-submit-job">
+                            <span class="btn-text">Generate Certificates Now</span>
+                            <span class="btn-spinner" style="display: none;">⏳ Creating Job...</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- TAB 2: JOB MONITOR -->
+        <section id="tab-jobs" class="tab-content">
+            <div class="section-header">
+                <div>
+                    <h2>Job Tracker & Generation Monitor</h2>
+                    <p class="subtitle">Monitor progress in real-time, view successful/failed counts, and download individual or zipped certificates.</p>
+                </div>
+                <button type="button" class="btn btn-outline" id="btn-refresh-jobs">🔄 Refresh Jobs</button>
+            </div>
+
+            <div class="jobs-layout">
+                <!-- Left: Jobs List -->
+                <div class="card jobs-list-card">
+                    <h3>Recent Jobs</h3>
+                    <div id="jobs-list" class="jobs-list-container">
+                        <div class="loading-state">Loading recent jobs...</div>
+                    </div>
+                </div>
+
+                <!-- Right: Active Job Detail View -->
+                <div class="card job-detail-card" id="job-detail-card">
+                    <div class="empty-state" id="job-detail-empty">
+                        <div class="empty-icon">📂</div>
+                        <h3>Select a Job</h3>
+                        <p>Click on any job from the list on the left to inspect its detailed status and download generated credentials.</p>
+                    </div>
+
+                    <div id="job-detail-content" style="display: none;">
+                        <div class="job-detail-header">
+                            <div>
+                                <span class="status-pill" id="detail-job-status">PENDING</span>
+                                <h3 id="detail-job-event">Event Name</h3>
+                                <div class="job-meta-line" id="detail-job-meta">Job ID: ... • Created: ...</div>
+                            </div>
+                            <div class="job-detail-actions">
+                                <a id="btn-download-all" href="#" class="btn btn-success" download>
+                                    📦 Download All (.ZIP)
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="progress-box">
+                            <div class="progress-info">
+                                <span class="progress-label">Generation Progress</span>
+                                <span class="progress-val" id="detail-progress-val">0%</span>
+                            </div>
+                            <div class="progress-track">
+                                <div class="progress-fill" id="detail-progress-fill" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Stat Counters -->
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-num" id="stat-total">0</div>
+                                <div class="stat-label">Total Recipients</div>
+                            </div>
+                            <div class="stat-card stat-success">
+                                <div class="stat-num" id="stat-successful">0</div>
+                                <div class="stat-label">Generated Successfully</div>
+                            </div>
+                            <div class="stat-card stat-failed">
+                                <div class="stat-num" id="stat-failed">0</div>
+                                <div class="stat-label">Failed / Invalid</div>
+                            </div>
+                        </div>
+
+                        <!-- Recipients Generation Results Table -->
+                        <div class="certificates-list-section">
+                            <h4>Recipient Generation Results</h4>
+                            <div class="table-wrapper">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Recipient</th>
+                                            <th>Email</th>
+                                            <th>Status</th>
+                                            <th>Verification Code / Error</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="detail-certs-tbody">
+                                        <!-- Certificates rendered dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: VERIFY CREDENTIAL -->
+        <section id="tab-verify" class="tab-content">
+            <div class="section-header">
+                <div>
+                    <h2>Public Certificate Verification</h2>
+                    <p class="subtitle">Validate the authenticity and tamper-resistance of any issued certificate using its unique code.</p>
+                </div>
+            </div>
+
+            <div class="card verify-card">
+                <form id="verify-form" class="verify-form">
+                    <div class="form-group">
+                        <label for="verify-code-input">Enter Certificate ID / Verification Code</label>
+                        <div class="verify-input-group">
+                            <input type="text" id="verify-code-input" placeholder="e.g. CERT-202610-A1B2C3D4" required>
+                            <button type="submit" class="btn btn-primary" id="btn-verify">Verify Credential</button>
+                        </div>
+                    </div>
+                </form>
+
+                <div id="verify-result-box" class="verify-result-box" style="display: none;">
+                    <!-- Verification outcome dynamically injected -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="app-footer">
+        <div class="footer-container">
+            <div>
+                <strong>CertifyFast Backend Engine</strong> — Built with FastAPI, SQLite / SQLAlchemy & ReportLab.
+            </div>
+            <div>
+                <a href="/docs" target="_blank">OpenAPI Docs</a> &nbsp;|&nbsp; 
+                <a href="/health" target="_blank">Health Check</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
